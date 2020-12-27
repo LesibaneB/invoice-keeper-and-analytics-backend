@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { EntityExtractionModule } from './entity-extraction/entity-extraction.module';
 
 @Module({
-  imports: [],
+  imports: [EntityExtractionModule],
   controllers: [AppController],
   providers: [AppService],
 })
