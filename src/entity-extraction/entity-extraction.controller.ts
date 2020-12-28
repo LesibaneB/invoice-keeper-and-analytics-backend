@@ -1,14 +1,16 @@
-import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { EntityExtractionService } from './entity-extraction.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { ExtractEntitiesDto } from './extract-entities.dto';
+import { AnalysisResult } from './analysis-result';
 
 @Controller('entity-extraction')
 export class EntityExtractionController {
   constructor(private extractionService: EntityExtractionService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('image'))
-  public extractInvoiceData(@UploadedFile() file): any {
-    return this.extractionService.extractEntities(file)
+  public async extractInvoiceData(
+    @Body() extractEntitiesDto: ExtractEntitiesDto,
+  ): Promise<AnalysisResult[]> {
+    return this.extractionService.extractEntities(extractEntitiesDto)
   }
 }
