@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { EntityExtractionService } from './entity-extraction.service';
-import { ExtractEntitiesDto } from './extract-entities.dto';
-import { AnalysisResult } from './analysis-result';
+import { ExtractEntitiesDto } from './dto/extract-entities.dto';
+import { AnalysisResult } from './models/analysis-result';
 
 @Controller('entity-extraction')
 export class EntityExtractionController {
@@ -9,8 +9,8 @@ export class EntityExtractionController {
 
   @Post()
   public async extractInvoiceData(
-    @Body() extractEntitiesDto: ExtractEntitiesDto,
+    @Body() payload: ExtractEntitiesDto,
   ): Promise<AnalysisResult[]> {
-    return this.extractionService.extractEntities(extractEntitiesDto)
+    return this.extractionService.extractEntities(payload);
   }
 }
