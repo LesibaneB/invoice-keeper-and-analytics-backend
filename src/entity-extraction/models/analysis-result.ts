@@ -1,4 +1,4 @@
 export class AnalysisResult {
-  fieldName: string
-  fieldValue: string
+  fieldName: string;
+  fieldValue: string;
 }
