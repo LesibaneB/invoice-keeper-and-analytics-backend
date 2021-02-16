@@ -1,17 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AccountRepository } from './repositories/account-repository';
-import { RegisterAccountDto } from './dto/register-account.dto';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const bcrypt = require('bcrypt');
+import { CreateAccountDto } from './dto/create-account.dto';
+import * as bcrypt from 'bcrypt';
 
 const SALT_ROUNDS = 10;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(private accountRepo: AccountRepository) {}
 
   public async createAccount(
-    registerAccountData: RegisterAccountDto,
+    registerAccountData: CreateAccountDto,
   ): Promise<void> {
     const { emailAddress, password } = registerAccountData;
     const accountWithIdenticalEmail = await this.accountRepo.findByEmailAddress(
@@ -19,6 +19,9 @@ export class AuthService {
     );
 
     if (accountWithIdenticalEmail) {
+      this.logger.error(
+        `Account with email address ${emailAddress} already exists`,
+      );
       throw new Error('An account with this email address already exists');
     }
 

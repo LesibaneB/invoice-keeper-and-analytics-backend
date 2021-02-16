@@ -1,17 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { google } from '@google-cloud/automl/build/protos/protos';
 import { ExtractEntitiesDto } from './dto/extract-entities.dto';
 import { ConfigService } from '@nestjs/config';
 import { AnalysisResult } from './models/analysis-result';
 import IAnnotationPayload = google.cloud.automl.v1.IAnnotationPayload;
+import * as camelCase from 'lodash.camelcase';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { PredictionServiceClient } = require('@google-cloud/automl').v1;
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const camelCase = require('lodash.camelcase');
 
 @Injectable()
 export class EntityExtractionService {
   private client = new PredictionServiceClient();
+  private readonly logger = new Logger(EntityExtractionService.name);
 
   constructor(private configService: ConfigService) {}
 
@@ -38,10 +39,10 @@ export class EntityExtractionService {
 
     const [response] = await this.client.predict(request);
 
-    console.log(response);
+    this.logger.log('Prediction response : ', response);
 
     for (const result of response.payload) {
-      console.log(
+      this.logger.log(
         `Predicted content text: ${result.textExtraction.textSegment.content}`,
       );
     }

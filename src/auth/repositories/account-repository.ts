@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Account, AccountDocument } from '../schemas/account-schema';
 import { Model } from 'mongoose';
-import { RegisterAccountDto } from '../dto/register-account.dto';
+import { CreateAccountDto } from '../dto/create-account.dto';
 import { Password, PasswordDocument } from '../schemas/passwords-schema';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class AccountRepository {
   ) {}
 
   public async save(
-    registerAccountData: RegisterAccountDto,
+    registerAccountData: CreateAccountDto,
   ): Promise<AccountDocument> {
     const account = new this.accountModel(registerAccountData);
     return account.save();

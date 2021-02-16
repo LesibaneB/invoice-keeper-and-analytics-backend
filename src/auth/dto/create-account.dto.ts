@@ -1,7 +1,7 @@
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 import { IsSameAs } from '../utils/is-same-as-validation-decorator';
 
-export class RegisterAccountDto {
+export class CreateAccountDto {
   @IsNotEmpty({ message: 'The firstName cannot be empty.' })
   firstName: string;
 
