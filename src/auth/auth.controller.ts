@@ -7,7 +7,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('/account')
-  public async createAccount(@Body() payload: CreateAccountDto): Promise<any> {
+  public async createAccount(@Body() payload: CreateAccountDto): Promise<void> {
     try {
       await this.authService.createAccount(payload);
     } catch (e) {
