@@ -1,26 +1,30 @@
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 import { IsSameAs } from '../utils/is-same-as-validation-decorator';
+import { AUTH_CREATE_ACCOUNT_ERROR_MESSAGES } from '../utils/messages';
 
 export class CreateAccountDto {
-  @IsNotEmpty({ message: 'The firstName cannot be empty.' })
-  firstName: string;
+  @IsNotEmpty({ message: AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.firstNameEmpty })
+  readonly firstName: string;
 
-  @IsNotEmpty({ message: 'The lastName cannot be empty.' })
-  lastName: string;
+  @IsNotEmpty({ message: AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.lastNameEmpty })
+  readonly lastName: string;
 
-  @IsEmail()
-  emailAddress: string;
+  @IsEmail(
+    {},
+    { message: AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.emailAddressInvalid },
+  )
+  readonly emailAddress: string;
 
   @MinLength(8, {
-    message: 'The password needs to at least be 8 characters long.',
+    message: AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.passwordShort,
   })
-  password: string;
+  readonly password: string;
 
   @MinLength(8, {
-    message: 'The password needs to at least be 8 characters long.',
+    message: AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.passwordShort,
   })
   @IsSameAs('password', {
-    message: 'Confirmation password must be the same as password.',
+    message: AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.confirmPasswordNotMatch,
   })
-  confirmPassword: string;
+  readonly confirmPassword: string;
 }
