@@ -19,7 +19,9 @@ export class AccountRepository {
     return account.save();
   }
 
-  public async findByEmailAddress(emailAddress: string): Promise<Account> {
+  public async findByEmailAddress(
+    emailAddress: string,
+  ): Promise<AccountDocument> {
     return this.accountModel.findOne({ emailAddress }).exec();
   }
 
