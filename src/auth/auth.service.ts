@@ -5,16 +5,16 @@ import * as bcrypt from 'bcrypt';
 import { Account } from './schemas/account-schema';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/JwtToken.dto';
+import { ACCOUNT_EXISTS_ERROR_MESSAGE } from './utils/messages';
 
 const SALT_ROUNDS = 10;
-const JWT_EXPIRY_PERIOD = 3600;
-
+export const JWT_EXPIRY_PERIOD = 3600;
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(
-    private accountRepo: AccountRepository,
-    protected jwtService: JwtService,
+    private readonly accountRepo: AccountRepository,
+    private readonly jwtService: JwtService,
   ) {}
 
   public async createAccount(
@@ -29,7 +29,7 @@ export class AuthService {
       this.logger.error(
         `Account with email address ${emailAddress} already exists`,
       );
-      throw new Error('An account with this email address already exists');
+      throw new Error(ACCOUNT_EXISTS_ERROR_MESSAGE);
     }
 
     const newAccount = await this.accountRepo.save(registerAccountData);

@@ -15,7 +15,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('/account')
   public async createAccount(@Body() payload: CreateAccountDto): Promise<void> {

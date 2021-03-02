@@ -1,35 +1,28 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import * as faker from 'faker';
+import { rootMongooseTestModule } from '../utils/mongo-inmemory-db-handler';
+import { AuthModule } from './auth.module';
+import { BadRequestException } from '@nestjs/common';
+import { ACCOUNT_EXISTS_ERROR_MESSAGE } from './utils/messages';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let authServiceSpy: AuthService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AuthController],
-      providers: [
-        {
-          provide: AuthService,
-          useFactory: () => ({
-            createAccount: jest.fn(() => false),
-          }),
-        },
-      ],
+      imports: [rootMongooseTestModule(), AuthModule],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
-    authServiceSpy = module.get<AuthService>(AuthService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should call the auth service to create account', async () => {
+  it('should successfully call the auth controller to create account', async () => {
     const password = faker.internet.password();
     const createAccountParams: CreateAccountDto = {
       firstName: faker.name.findName(),
@@ -40,9 +33,24 @@ describe('AuthController', () => {
     };
 
     await controller.createAccount(createAccountParams);
-    expect(authServiceSpy.createAccount).toHaveBeenCalledWith(
-      createAccountParams,
-    );
-    expect(authServiceSpy.createAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it('should fail with appropriate message when the auth controller is called to create a duplicate email account', async () => {
+    const password = faker.internet.password();
+    const createAccountParams: CreateAccountDto = {
+      firstName: faker.name.findName(),
+      lastName: faker.name.lastName(),
+      emailAddress: faker.internet.email(),
+      password,
+      confirmPassword: password,
+    };
+
+    await controller.createAccount(createAccountParams);
+    try {
+      await controller.createAccount(createAccountParams);
+    } catch (e) {
+      expect(e).toBeInstanceOf(BadRequestException);
+      expect(e.message).toBe(ACCOUNT_EXISTS_ERROR_MESSAGE);
+    }
   });
 });
