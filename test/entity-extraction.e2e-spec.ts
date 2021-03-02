@@ -141,8 +141,7 @@ describe('Entity Extraction E2E', () => {
     return request(app.getHttpServer())
       .post('/entity-extraction')
       .send(extractionPayload)
-      .expect(201)
-      .expect(extractionResult);
+      .expect(201, extractionResult);
   });
 
   it('/entity-extraction (POST) should fail to extract entities when called with empty invoiceText in payload', () => {
@@ -153,8 +152,7 @@ describe('Entity Extraction E2E', () => {
     return request(app.getHttpServer())
       .post('/entity-extraction')
       .send(extractionPayload)
-      .expect(400)
-      .expect({
+      .expect(400, {
         statusCode: 400,
         message: [ENTITY_EXTRACTION_ERROR_MESSAGES.invoiceTextEmpty],
         error: 'Bad Request',
