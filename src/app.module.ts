@@ -4,7 +4,9 @@ import { AppService } from './app.service';
 import { EntityExtractionModule } from './entity-extraction/entity-extraction.module';
 import { ConfigModule } from '@nestjs/config';
 
-import gcloudConfig from './config/gcloud-automl-configuration';
+import { getGCloudConfig } from './config/gcloud-automl-configuration';
+import { getSendGridConfig } from './config/sendgrid-configuration';
+
 import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 
@@ -13,7 +15,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     EntityExtractionModule,
     AuthModule,
     ConfigModule.forRoot({
-      load: [gcloudConfig],
+      load: [getGCloudConfig, getSendGridConfig],
     }),
     MongooseModule.forRoot(
       'mongodb://scannerUser:scannerUser123@localhost:27017/invoiceScannerAndAnalyticsDB',
