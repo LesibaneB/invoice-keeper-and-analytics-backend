@@ -9,14 +9,13 @@ describe('EmailSenderService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ConfigService,
-        EmailSenderService,
         {
-          provide: 'SendGridMail',
-          useFactory: () => ({
-            send: jest.fn(() => true),
+          provide: ConfigService,
+          useFactory: ()=>({
+            get: jest.fn(()=> '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')
           }),
         },
+        EmailSenderService,
       ],
     }).compile();
 
@@ -33,7 +32,7 @@ describe('EmailSenderService', () => {
       subject: 'OTP verification',
       templateName: 'otp-email.html',
       payload: {
-        receipient: 'Bongs',
+        recipient: 'Bongs',
         code: 12345,
       },
     };

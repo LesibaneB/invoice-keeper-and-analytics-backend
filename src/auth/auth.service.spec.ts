@@ -1,3 +1,5 @@
+import { OTPRepository } from './repositories/otp-repository';
+import { EmailSenderService } from '../email-sender/email-sender.service';
 import { JwtTokenDto } from './dto/JwtToken.dto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService, JWT_EXPIRY_PERIOD } from './auth.service';
@@ -13,10 +15,14 @@ import {
 } from '../utils/mongo-inmemory-db-handler';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Password, PasswordSchema } from './schemas/passwords-schema';
+import { PasswordRepository } from './repositories/password-repository';
+import { OTPVerification, OTPVerificationSchema } from './schemas/otp-verification-schema';
 
 describe('AuthService', () => {
   let service: AuthService;
   let accountRepo: AccountRepository;
+  let passwordRepo: PasswordRepository;
+  let emailService: EmailSenderService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,17 +37,33 @@ describe('AuthService', () => {
             name: Password.name,
             schema: PasswordSchema,
           },
+          {
+            name: OTPVerification.name,
+            schema: OTPVerificationSchema
+          }
         ]),
         JwtModule.register({
           secret: JWT_CONSTANTS.secret,
           signOptions: { expiresIn: '1h' },
         }),
       ],
-      providers: [AuthService, AccountRepository],
+      providers: [
+        AuthService,
+        AccountRepository, 
+        PasswordRepository,
+        OTPRepository,
+      {
+        provide: EmailSenderService,
+        useFactory: ()=>({
+          sendOTPVericationEmail: jest.fn(()=>true),
+        })
+      }],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
     accountRepo = module.get<AccountRepository>(AccountRepository);
+    passwordRepo = module.get<PasswordRepository>(PasswordRepository);
+    emailService = module.get<EmailSenderService>(EmailSenderService);
   });
 
   afterAll(async () => await closeInMemoryMongoConnection());
@@ -50,7 +72,7 @@ describe('AuthService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should add a new account when createAccount() is called with the correct values in the payload.', async () => {
+  it('should add a new account when createAccount() is called with the correct values in the payload and send email to account email address.', async () => {
     const password = faker.internet.password();
     const emailAddress = faker.internet.email();
     const createAccountParams: CreateAccountDto = {
@@ -71,8 +93,11 @@ describe('AuthService', () => {
     expect(account.emailAddress).toEqual(createAccountParams.emailAddress);
 
     // Check if password was created for account
-    const passwordForAccount = await accountRepo.findPassword(account._id);
+    const passwordForAccount = await passwordRepo.findPassword(account._id);
     expect(passwordForAccount).toBeDefined();
+
+    // Check if email was sent
+    expect(emailService.sendOTPVericationEmail).toHaveBeenCalledTimes(1);
   });
 
   it('should successfully validate an account when validateAccount() is called with the correct emailAddress and password and return the validated account', async () => {
@@ -100,13 +125,14 @@ describe('AuthService', () => {
     expect(validatedAccount.emailAddress).toEqual(emailAddress);
   });
 
-  it('should return a jwt token when sign in is called.', async() => {
+  it('should return a jwt token when sign in is called.', async () => {
     const token: JwtTokenDto = await service.signIn({
       firstName: faker.name.findName(),
       lastName: faker.name.lastName(),
       emailAddress: faker.internet.email(),
+      verified: true,
     });
-    
+
     expect(token).toBeDefined();
     expect(token.access_token).toBeDefined();
     expect(token.expires).toBeDefined();

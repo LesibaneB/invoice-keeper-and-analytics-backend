@@ -1,3 +1,4 @@
+import { EMAIL_ADDRESS_INVALID } from './../src/auth/utils/messages';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -113,7 +114,7 @@ describe('AuthController (e2e)', () => {
       .send(createAccountParams)
       .expect(400, {
         statusCode: 400,
-        message: [AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.emailAddressInvalid],
+        message: [EMAIL_ADDRESS_INVALID],
         error: 'Bad Request',
       });
   });

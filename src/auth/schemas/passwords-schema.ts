@@ -7,6 +7,7 @@ export type PasswordDocument = Password & Document;
 export class Password {
   @Prop({ required: true })
   accountId: string;
+  
   @Prop({ required: true })
   passwordHash: string;
 }

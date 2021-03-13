@@ -1,15 +1,19 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EmailPayload } from './models/email-payload';
-import sendGridMail, { MailDataRequired, MailService } from '@sendgrid/mail';
+import { MailDataRequired, MailService } from '@sendgrid/mail';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as Mustache from 'mustache';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class EmailSenderService {
   private readonly logger = new Logger(EmailSenderService.name);
+  private readonly sendGrid = new MailService();
 
-  constructor(@Inject('SendGridMail') readonly sendGridMail: MailService) {}
+  constructor(private readonly configService: ConfigService) {
+    this.sendGrid.setApiKey(this.configService.get<string>('api.sendEmailKey'))
+  }
 
   public async sendOTPVericationEmail(
     emailPayload: EmailPayload,
@@ -18,17 +22,17 @@ export class EmailSenderService {
 
     const template = await this.loadTemplate(templateName);
 
-    const renderdTemplate = Mustache.render(template, payload);
+    const renderedTemplate = Mustache.render(template, payload);
 
     const msg: MailDataRequired = {
       to,
       from: 'bonakele.lesibane@gmail.com',
       subject,
-      html: renderdTemplate,
+      html: renderedTemplate,
     };
 
     try {
-      await sendGridMail.send(msg);
+      await this.sendGrid.send(msg);
       this.logger.log(`Sent mail to ${to}`);
     } catch (error) {
       this.logger.error(

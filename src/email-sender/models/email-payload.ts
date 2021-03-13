@@ -6,6 +6,6 @@ export interface EmailPayload {
 }
 
 interface MessagePayload {
-    readonly receipient: string;
+    readonly recipient: string;
     readonly code: number;
 }
