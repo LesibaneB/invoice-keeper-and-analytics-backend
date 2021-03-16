@@ -1,3 +1,4 @@
+import { EMAIL_ADDRESS_INVALID } from './../utils/messages';
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 import { IsSameAs } from '../utils/is-same-as-validation-decorator';
 import { AUTH_CREATE_ACCOUNT_ERROR_MESSAGES } from '../utils/messages';
@@ -11,7 +12,7 @@ export class CreateAccountDto {
 
   @IsEmail(
     {},
-    { message: AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.emailAddressInvalid },
+    { message: EMAIL_ADDRESS_INVALID },
   )
   readonly emailAddress: string;
 
