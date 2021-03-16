@@ -3,13 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Account, AccountDocument } from '../schemas/account-schema';
 import { Model } from 'mongoose';
 import { CreateAccountDto } from '../dto/create-account.dto';
-import { Password, PasswordDocument } from '../schemas/passwords-schema';
 
 @Injectable()
 export class AccountRepository {
   constructor(
     @InjectModel(Account.name) private accountModel: Model<AccountDocument>,
-    @InjectModel(Password.name) private passwordModel: Model<PasswordDocument>,
   ) {}
 
   public async save(
@@ -25,15 +23,9 @@ export class AccountRepository {
     return this.accountModel.findOne({ emailAddress }).exec();
   }
 
-  public async savePassword(
-    accountId: string,
-    passwordHash: string,
-  ): Promise<void> {
-    const password = new this.passwordModel({ accountId, passwordHash });
-    await password.save();
-  }
-
-  public async findPassword(accountId: string): Promise<Password> {
-    return this.passwordModel.findOne({ accountId }).exec();
+  public async updateVerified(accountId: string): Promise<void> {
+    await this.accountModel
+      .updateOne({ _id: accountId }, { $set: { verified: true } })
+      .exec();
   }
 }

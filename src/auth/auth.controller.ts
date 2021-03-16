@@ -5,13 +5,13 @@ import {
   Post,
   UseGuards,
   Request,
-  Get,
 } from '@nestjs/common';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtTokenDto } from './dto/JwtToken.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { VerifyAccountDTO as VerifyAccountDTO } from './dto/verify-otp.dto';
+import { ResendAccountVerificationDTO } from './dto/resend-otp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -32,9 +32,21 @@ export class AuthController {
     return this.authService.signIn(req.user);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('/test-jwt')
-  getProfile(@Request() req) {
-    return req.user;
+  @Post('/account/verify')
+  public async verifyAccount(@Body() payload: VerifyAccountDTO): Promise<void> {
+    try {
+      await this.authService.verifyAccount(payload);
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
+  }
+
+  @Post('/account/resend-verification')
+  public async resendAccountVerification(@Body() payload: ResendAccountVerificationDTO): Promise<void> {
+    try {
+      await this.authService.resendAccountVerification(payload);
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
   }
 }

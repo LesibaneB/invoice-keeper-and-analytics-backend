@@ -13,6 +13,9 @@ export class Account {
 
   @Prop({ required: true, unique: true })
   emailAddress: string;
+
+  @Prop({required: true, default: false})
+  verified: boolean;
 }
 
 export const AccountSchema = SchemaFactory.createForClass(Account);
