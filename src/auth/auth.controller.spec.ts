@@ -21,11 +21,15 @@ import {
   OTPVerification,
   OTPVerificationSchema,
 } from './schemas/otp-verification-schema';
+import { PasswordRepository } from './repositories/password-repository';
+import { Password, PasswordSchema } from './schemas/passwords-schema';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let otpRepo: OTPRepository;
   let accountRepo: AccountRepository;
+  let passwordRepo: PasswordRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,14 +45,19 @@ describe('AuthController', () => {
             name: OTPVerification.name,
             schema: OTPVerificationSchema,
           },
+          {
+            name: Password.name,
+            schema: PasswordSchema,
+          },
         ]),
       ],
-      providers: [AccountRepository, OTPRepository],
+      providers: [AccountRepository, OTPRepository, PasswordRepository],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
     otpRepo = module.get<OTPRepository>(OTPRepository);
     accountRepo = module.get<AccountRepository>(AccountRepository);
+    passwordRepo = module.get<PasswordRepository>(PasswordRepository);
   });
 
   afterEach(async () => await closeInMemoryMongoConnection());
@@ -140,7 +149,7 @@ describe('AuthController', () => {
     }
   });
 
-  it('should successfully resend account verification when resendVerification() is called with the correct values.', async () => {
+  it('should successfully send account verification when sendVerification() is called with the correct values.', async () => {
     const password = faker.internet.password();
     const createAccountParams: CreateAccountDto = {
       firstName: faker.name.findName(),
@@ -162,7 +171,7 @@ describe('AuthController', () => {
     // Find old OTP for account
     const otp = await otpRepo.find(account._id);
 
-    await controller.resendAccountVerification({
+    await controller.sendAccountVerification({
       emailAddress: account.emailAddress,
     });
 
@@ -173,7 +182,7 @@ describe('AuthController', () => {
     expect(newOtp.otp).not.toBe(otp.otp);
   });
 
-  it('should fail to resend account verification when resendAccountVerification() is called with an incorrect email address.', async () => {
+  it('should fail to send account verification when sendAccountVerification() is called with an incorrect email address.', async () => {
     const password = faker.internet.password();
     const createAccountParams: CreateAccountDto = {
       firstName: faker.name.findName(),
@@ -186,11 +195,88 @@ describe('AuthController', () => {
     await controller.createAccount(createAccountParams);
 
     try {
-      await controller.resendAccountVerification({
+      await controller.sendAccountVerification({
         emailAddress: faker.internet.email(),
       });
     } catch (error) {
       expect(error).toBeInstanceOf(BadRequestException);
+      expect(error.message).toBe(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
+    }
+  });
+
+  it('should successfully reset password when resetPassword() is called with the correct emailAddress.', async () => {
+    const password = faker.internet.password();
+    const createAccountParams: CreateAccountDto = {
+      firstName: faker.name.findName(),
+      lastName: faker.name.lastName(),
+      emailAddress: faker.internet.email(),
+      password,
+      confirmPassword: password,
+    };
+
+    await controller.createAccount(createAccountParams);
+
+    // Find created account
+    const account = await accountRepo.findByEmailAddress(
+      createAccountParams.emailAddress,
+    );
+
+    expect(account).toBeDefined();
+
+    const oldPassword = await passwordRepo.find(account._id);
+    expect(oldPassword).toBeDefined();
+
+    const newPassword = faker.internet.password();
+
+    const resetPasswordPayload: ResetPasswordDTO = {
+      emailAddress: account.emailAddress,
+      password: newPassword,
+      confirmPassword: newPassword,
+    }
+
+    await controller.resetPassword(resetPasswordPayload);
+
+    const updatedPassword = await passwordRepo.find(account._id);
+    expect(updatedPassword).toBeDefined();
+
+    // Check if passwords aren't the same
+    expect(oldPassword.passwordHash).not.toEqual(updatedPassword.passwordHash);
+  });
+
+  it('should fail to reset password when resetPassword() is called with the incorrect emailAddress.', async () => {
+    const password = faker.internet.password();
+    const createAccountParams: CreateAccountDto = {
+      firstName: faker.name.findName(),
+      lastName: faker.name.lastName(),
+      emailAddress: faker.internet.email(),
+      password,
+      confirmPassword: password,
+    };
+
+    await controller.createAccount(createAccountParams);
+
+    // Find created account
+    const account = await accountRepo.findByEmailAddress(
+      createAccountParams.emailAddress,
+    );
+
+    expect(account).toBeDefined();
+
+    const oldPassword = await passwordRepo.find(account._id);
+    expect(oldPassword).toBeDefined();
+
+    const newPassword = faker.internet.password();
+
+    const resetPasswordPayload: ResetPasswordDTO = {
+      emailAddress: faker.internet.email(),
+      password: newPassword,
+      confirmPassword: newPassword,
+    }
+
+    try {
+      await controller.resetPassword(resetPasswordPayload);
+    } catch (error) {
+      expect(error).toBeDefined();
       expect(error.message).toBe(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
     }
   });
