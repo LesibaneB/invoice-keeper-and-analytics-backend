@@ -1,3 +1,4 @@
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 import {
   BadRequestException,
   Body,
@@ -5,13 +6,14 @@ import {
   Post,
   UseGuards,
   Request,
+  Put,
 } from '@nestjs/common';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtTokenDto } from './dto/JwtToken.dto';
 import { VerifyAccountDTO as VerifyAccountDTO } from './dto/verify-otp.dto';
-import { ResendAccountVerificationDTO } from './dto/resend-otp.dto';
+import { SendAccountVerificationDTO } from './dto/resend-otp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -41,10 +43,19 @@ export class AuthController {
     }
   }
 
-  @Post('/account/resend-verification')
-  public async resendAccountVerification(@Body() payload: ResendAccountVerificationDTO): Promise<void> {
+  @Post('/account/send-verification')
+  public async sendAccountVerification(@Body() payload: SendAccountVerificationDTO): Promise<void> {
     try {
-      await this.authService.resendAccountVerification(payload);
+      await this.authService.sendAccountVerification(payload);
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
+  }
+
+  @Put('/account/reset-password')
+  public async resetPassword(@Body() payload: ResetPasswordDTO): Promise<void> {
+    try {
+      await this.authService.resetPassword(payload);
     } catch (e) {
       throw new BadRequestException(e.message);
     }

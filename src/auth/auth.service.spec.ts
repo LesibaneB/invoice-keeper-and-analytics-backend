@@ -20,7 +20,8 @@ import {
   OTPVerification,
   OTPVerificationSchema,
 } from './schemas/otp-verification-schema';
-import { OTP_VERIFICATION_OTP_INVALID } from './utils/messages';
+import { ACCOUNT_NOT_FOUND_ERROR_MESSAGE, OTP_VERIFICATION_OTP_INVALID } from './utils/messages';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -101,7 +102,7 @@ describe('AuthService', () => {
     expect(account.verified).toEqual(false);
 
     // Check if password was created for account
-    const passwordForAccount = await passwordRepo.findPassword(account._id);
+    const passwordForAccount = await passwordRepo.find(account._id);
     expect(passwordForAccount).toBeDefined();
 
     // Check if email was sent
@@ -231,7 +232,7 @@ describe('AuthService', () => {
     }
   });
 
-  it('should successfully resend account verification email when resendVerification() is called with the correct values and replace old otp.', async () => {
+  it('should successfully send account verification email when sendVerification() is called with the correct values and replace old otp.', async () => {
     const password = faker.internet.password();
     const emailAddress = faker.internet.email();
     const createAccountParams: CreateAccountDto = {
@@ -259,7 +260,7 @@ describe('AuthService', () => {
     const otp = await otpRepo.find(account.id);
     expect(otp).toBeDefined();
 
-    await service.resendAccountVerification({
+    await service.sendAccountVerification({
       emailAddress: account.emailAddress,
     });
 
@@ -267,5 +268,86 @@ describe('AuthService', () => {
     const newOTP = await otpRepo.find(account.id);
     expect(newOTP).toBeDefined();
     expect(newOTP.otp).not.toEqual(otp.otp);
+  });
+
+  it('should successfully reset password when resetPassword() is called with the correct email address.', async () => {
+    const password = faker.internet.password();
+    const emailAddress = faker.internet.email();
+    const createAccountParams: CreateAccountDto = {
+      firstName: faker.name.findName(),
+      lastName: faker.name.lastName(),
+      emailAddress,
+      password,
+      confirmPassword: password,
+    };
+
+    await service.createAccount(createAccountParams);
+
+    // Check if the account exists in the DB
+    const account = await accountRepo.findByEmailAddress(emailAddress);
+    expect(account).toBeDefined();
+    expect(account.firstName).toEqual(createAccountParams.firstName);
+    expect(account.lastName).toEqual(createAccountParams.lastName);
+    expect(account.emailAddress).toEqual(createAccountParams.emailAddress);
+    expect(account.verified).toEqual(false);
+    
+    const oldPassword = await passwordRepo.find(account._id);
+    expect(oldPassword).toBeDefined();
+
+    const newPassword = faker.internet.password();
+
+    const resetPasswordPayload: ResetPasswordDTO = {
+      emailAddress,
+      password: newPassword,
+      confirmPassword: newPassword,
+    }
+
+    await service.resetPassword(resetPasswordPayload);
+
+    const updatedPassword = await passwordRepo.find(account._id);
+    expect(updatedPassword).toBeDefined();
+
+    // Check if passwords aren't the same
+    expect(oldPassword.passwordHash).not.toEqual(updatedPassword.passwordHash);
+  });
+
+  it('should fail to reset password when resetPassword() is called with an incorrect email address.', async () => {
+    const password = faker.internet.password();
+    const emailAddress = faker.internet.email();
+    const createAccountParams: CreateAccountDto = {
+      firstName: faker.name.findName(),
+      lastName: faker.name.lastName(),
+      emailAddress,
+      password,
+      confirmPassword: password,
+    };
+
+    await service.createAccount(createAccountParams);
+
+    // Check if the account exists in the DB
+    const account = await accountRepo.findByEmailAddress(emailAddress);
+    expect(account).toBeDefined();
+    expect(account.firstName).toEqual(createAccountParams.firstName);
+    expect(account.lastName).toEqual(createAccountParams.lastName);
+    expect(account.emailAddress).toEqual(createAccountParams.emailAddress);
+    expect(account.verified).toEqual(false);
+    
+    const oldPassword = await passwordRepo.find(account._id);
+    expect(oldPassword).toBeDefined();
+
+    const newPassword = faker.internet.password();
+
+    const resetPasswordPayload: ResetPasswordDTO = {
+      emailAddress: faker.internet.email(),
+      password: newPassword,
+      confirmPassword: newPassword,
+    }
+    
+    try {
+      await service.resetPassword(resetPasswordPayload);
+    } catch (error) {
+      expect(error).toBeDefined();
+      expect(error.message).toBe(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
+    }
   });
 });

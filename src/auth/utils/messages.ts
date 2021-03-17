@@ -1,4 +1,4 @@
-export const AUTH_CREATE_ACCOUNT_ERROR_MESSAGES = {
+export const AUTH_ACCOUNT_ERROR_MESSAGES = {
   firstNameEmpty: 'The firstName cannot be empty.',
   lastNameEmpty: 'The lastName cannot be empty.',
   passwordShort: 'The password needs to at least be 8 characters long.',
