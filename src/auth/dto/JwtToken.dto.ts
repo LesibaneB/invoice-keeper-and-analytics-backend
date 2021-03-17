@@ -1,4 +1,4 @@
 export interface JwtTokenDto {
-  access_token: string;
-  expires: number;
+  readonly access_token: string;
+  readonly expires: number;
 }

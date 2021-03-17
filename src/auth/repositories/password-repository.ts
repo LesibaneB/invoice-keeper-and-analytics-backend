@@ -9,15 +9,19 @@ export class PasswordRepository {
     @InjectModel(Password.name) private passwordModel: Model<PasswordDocument>,
   ) {}
 
-  public async savePassword(
-    accountId: string,
-    passwordHash: string,
-  ): Promise<void> {
+  public async save(accountId: string, passwordHash: string): Promise<void> {
     const password = new this.passwordModel({ accountId, passwordHash });
     await password.save();
   }
 
-  public async findPassword(accountId: string): Promise<Password> {
+  public async find(accountId: string): Promise<Password> {
     return this.passwordModel.findOne({ accountId }).exec();
+  }
+
+  public async update(accountId: string, passwordHash): Promise<void> {
+    await this.passwordModel.updateOne(
+      { accountId },
+      { $set: { passwordHash } },
+    );
   }
 }

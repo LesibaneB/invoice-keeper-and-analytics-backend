@@ -23,7 +23,8 @@ import {
 import { EmailSenderService } from '../email-sender/email-sender.service';
 import { EmailPayload } from '../email-sender/models/email-payload';
 import { VerifyAccountDTO } from './dto/verify-otp.dto';
-import { ResendAccountVerificationDTO } from './dto/resend-otp.dto';
+import { SendAccountVerificationDTO } from './dto/resend-otp.dto';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 
 const SALT_ROUNDS = 10;
 export const JWT_EXPIRY_PERIOD = 3600;
@@ -55,7 +56,7 @@ export class AuthService {
 
     const newAccount = await this.accountRepo.save(registerAccountData);
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    await this.passwordRepo.savePassword(newAccount._id, passwordHash);
+    await this.passwordRepo.save(newAccount._id, passwordHash);
 
     const otpCode = generateOTP();
 
@@ -146,17 +147,12 @@ export class AuthService {
     await this.otpRepository.delete(account._id);
   }
 
-  public async resendAccountVerification(payload: ResendAccountVerificationDTO): Promise<void> {
+  public async sendAccountVerification(payload: SendAccountVerificationDTO): Promise<void> {
       const { emailAddress } = payload;
       const account = await this.accountRepo.findByEmailAddress(emailAddress);
       if (!account) {
         this.logger.error(`Account for email ${emailAddress} not found.`);
         throw new Error(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
-      }
-
-      if(account.verified) {
-        this.logger.error(`Account for email ${emailAddress} already verified.`);
-        throw new Error(ACCOUNT_ALREADY_VERIFIED_ERROR_MESSAGE);
       }
 
       const otpCode = generateOTP();
@@ -184,11 +180,24 @@ export class AuthService {
       await this.emailService.sendOTPVericationEmail(emailPayload);
   }
 
+  public async resetPassword (payload: ResetPasswordDTO): Promise<void> {
+    const { emailAddress, password } = payload;
+    const account = await this.accountRepo.findByEmailAddress(emailAddress);
+    if (!account) {
+      this.logger.error(`Account for email ${emailAddress} not found.`);
+      throw new Error(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
+    }
+
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    await this.passwordRepo.update(account._id, passwordHash);
+  }
+
   private async passwordMatches(
     accountId: string,
     password: string,
   ): Promise<boolean> {
-    const savedPassword = await this.passwordRepo.findPassword(accountId);
+    const savedPassword = await this.passwordRepo.find(accountId);
     if (!savedPassword) {
       this.logger.error(`Password for account ${accountId} not found.`);
       return false;

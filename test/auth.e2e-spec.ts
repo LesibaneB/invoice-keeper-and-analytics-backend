@@ -1,13 +1,14 @@
+import { ResetPasswordDTO } from './../src/auth/dto/reset-password.dto';
 import { VerifyAccountDTO } from './../src/auth/dto/verify-otp.dto';
 import { OTPRepository } from './../src/auth/repositories/otp-repository';
-import { EMAIL_ADDRESS_INVALID } from './../src/auth/utils/messages';
+import { ACCOUNT_NOT_FOUND_ERROR_MESSAGE, EMAIL_ADDRESS_INVALID } from './../src/auth/utils/messages';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { CreateAccountDto } from '../src/auth/dto/create-account.dto';
 import * as faker from 'faker';
 import {
-  AUTH_CREATE_ACCOUNT_ERROR_MESSAGES,
+  AUTH_ACCOUNT_ERROR_MESSAGES,
   LOGIN_UNAUTHORIZED_MESSAGE,
 } from '../src/auth/utils/messages';
 import {
@@ -16,7 +17,7 @@ import {
 } from '../src/utils/mongo-inmemory-db-handler';
 import { AccountRepository } from '../src/auth/repositories/account-repository';
 import { AuthModule } from '../src/auth/auth.module';
-import { ResendAccountVerificationDTO } from 'src/auth/dto/resend-otp.dto';
+import { SendAccountVerificationDTO } from '../src/auth/dto/resend-otp.dto';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -76,8 +77,8 @@ describe('AuthController (e2e)', () => {
       .expect(400, {
         statusCode: 400,
         message: [
-          AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.passwordShort,
-          AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.passwordShort,
+          AUTH_ACCOUNT_ERROR_MESSAGES.passwordShort,
+          AUTH_ACCOUNT_ERROR_MESSAGES.passwordShort,
         ],
         error: 'Bad Request',
       });
@@ -99,8 +100,8 @@ describe('AuthController (e2e)', () => {
       .expect(400, {
         statusCode: 400,
         message: [
-          AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.firstNameEmpty,
-          AUTH_CREATE_ACCOUNT_ERROR_MESSAGES.lastNameEmpty,
+          AUTH_ACCOUNT_ERROR_MESSAGES.firstNameEmpty,
+          AUTH_ACCOUNT_ERROR_MESSAGES.lastNameEmpty,
         ],
         error: 'Bad Request',
       });
@@ -149,7 +150,7 @@ describe('AuthController (e2e)', () => {
         expect(otp).toBeDefined();
 
         const accountVerificationPayload: VerifyAccountDTO = {
-          emailAddress,
+          emailAddress: account.emailAddress,
           otp: otp.otp,
         };
 
@@ -159,7 +160,7 @@ describe('AuthController (e2e)', () => {
           .expect(201)
           .then(() => {
             const signInPayload = {
-              emailAddress,
+              emailAddress: accountVerificationPayload.emailAddress,
               password,
             };
 
@@ -235,7 +236,7 @@ describe('AuthController (e2e)', () => {
       });
   });
 
-  it('/auth/account/resend-verification (POST) should succesfully resend verification for an account when trying to resend verification with a correct email address.', async () => {
+  it('/auth/account/send-verification (POST) should succesfully send verification for an account when trying to send verification with a correct email address.', async () => {
     const password = faker.internet.password();
     const emailAddress = faker.internet.email();
     const createAccountParams: CreateAccountDto = {
@@ -251,13 +252,110 @@ describe('AuthController (e2e)', () => {
       .send(createAccountParams)
       .expect(201)
       .then(async () => {
-        const resendVerificationPayload: ResendAccountVerificationDTO = {
+        const sendVerificationPayload: SendAccountVerificationDTO = {
           emailAddress,
         };
         return request(app.getHttpServer())
-          .post('/auth/account/resend-verification')
-          .send(resendVerificationPayload)
+          .post('/auth/account/send-verification')
+          .send(sendVerificationPayload)
           .expect(201);
+      });
+  });
+
+  it('/auth/account/send-verification (POST) should fail to send verification for an account when trying to send verification with an incorrect email address.', async () => {
+    const password = faker.internet.password();
+    const emailAddress = faker.internet.email();
+    const createAccountParams: CreateAccountDto = {
+      firstName: faker.name.findName(),
+      lastName: faker.name.lastName(),
+      emailAddress,
+      password,
+      confirmPassword: password,
+    };
+
+    return request(app.getHttpServer())
+      .post('/auth/account')
+      .send(createAccountParams)
+      .expect(201)
+      .then(async () => {
+        const sendVerificationPayload: SendAccountVerificationDTO = {
+          emailAddress: faker.internet.email(),
+        };
+
+        return request(app.getHttpServer())
+          .post('/auth/account/send-verification')
+          .send(sendVerificationPayload)
+          .expect(400, {
+            statusCode: 400,
+            message: ACCOUNT_NOT_FOUND_ERROR_MESSAGE,
+            error: 'Bad Request'
+          });
+      });
+  });
+
+  it('/auth/account/reset-password (PUT) should succesfully reset password for an account when trying to reset password with a correct payload.', async () => {
+    const password = faker.internet.password();
+    const emailAddress = faker.internet.email();
+    const createAccountParams: CreateAccountDto = {
+      firstName: faker.name.findName(),
+      lastName: faker.name.lastName(),
+      emailAddress,
+      password,
+      confirmPassword: password,
+    };
+
+    return request(app.getHttpServer())
+      .post('/auth/account')
+      .send(createAccountParams)
+      .expect(201)
+      .then(async () => {
+
+        const newPassword= faker.internet.password();
+        const resetPassword: ResetPasswordDTO = {
+          emailAddress: createAccountParams.emailAddress,
+          password: newPassword,
+          confirmPassword: newPassword,
+        };
+
+        return request(app.getHttpServer())
+          .put('/auth/account/reset-password')
+          .send(resetPassword)
+          .expect(200);
+      });
+  });
+
+  it('/auth/account/reset-password (PUT) should fail to reset password for an account when trying to reset password with an incorrect payload.', async () => {
+    const password = faker.internet.password();
+    const emailAddress = faker.internet.email();
+    const createAccountParams: CreateAccountDto = {
+      firstName: faker.name.findName(),
+      lastName: faker.name.lastName(),
+      emailAddress,
+      password,
+      confirmPassword: password,
+    };
+
+    return request(app.getHttpServer())
+      .post('/auth/account')
+      .send(createAccountParams)
+      .expect(201)
+      .then(async () => {
+
+        const newPassword= faker.internet.password();
+        const resetPassword: ResetPasswordDTO = {
+          emailAddress: faker.internet.email(),
+          password: newPassword,
+          confirmPassword: newPassword,
+        };
+
+        return request(app.getHttpServer())
+          .put('/auth/account/reset-password')
+          .send(resetPassword)
+          .expect(400, {
+            statusCode: 400,
+            message: ACCOUNT_NOT_FOUND_ERROR_MESSAGE,
+            error: 'Bad Request'
+          });
       });
   });
 });
