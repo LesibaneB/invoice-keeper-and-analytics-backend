@@ -7,7 +7,6 @@ import { Account } from './schemas/account-schema';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/JwtToken.dto';
 import {
-  ACCOUNT_ALREADY_VERIFIED_ERROR_MESSAGE,
   ACCOUNT_EXISTS_ERROR_MESSAGE,
   ACCOUNT_NOT_FOUND_ERROR_MESSAGE,
   OTP_VERIFICATION_OTP_EXPIRED,
@@ -107,6 +106,7 @@ export class AuthService {
         firstName: account.firstName,
         lastName: account.lastName,
         emailAddress: account.emailAddress,
+        verified: account.verified,
       }),
       expires: JWT_EXPIRY_PERIOD,
     };
@@ -118,11 +118,6 @@ export class AuthService {
     if (!account) {
       this.logger.error(`Account for email ${emailAddress} not found.`);
       throw new Error(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
-    }
-
-    if(account.verified) {
-      this.logger.error(`Account for email ${emailAddress} already verified.`);
-      throw new Error(ACCOUNT_ALREADY_VERIFIED_ERROR_MESSAGE);
     }
 
     const otpVerification = await this.otpRepository.find(account._id);
@@ -147,40 +142,42 @@ export class AuthService {
     await this.otpRepository.delete(account._id);
   }
 
-  public async sendAccountVerification(payload: SendAccountVerificationDTO): Promise<void> {
-      const { emailAddress } = payload;
-      const account = await this.accountRepo.findByEmailAddress(emailAddress);
-      if (!account) {
-        this.logger.error(`Account for email ${emailAddress} not found.`);
-        throw new Error(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
-      }
+  public async sendAccountVerification(
+    payload: SendAccountVerificationDTO,
+  ): Promise<void> {
+    const { emailAddress } = payload;
+    const account = await this.accountRepo.findByEmailAddress(emailAddress);
+    if (!account) {
+      this.logger.error(`Account for email ${emailAddress} not found.`);
+      throw new Error(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
+    }
 
-      const otpCode = generateOTP();
+    const otpCode = generateOTP();
 
-      const otp = {
-        accountId: account._id,
-        otp: otpCode,
-        expiry: generateOTPExpiry(),
-      };
+    const otp = {
+      accountId: account._id,
+      otp: otpCode,
+      expiry: generateOTPExpiry(),
+    };
 
-      await this.otpRepository.delete(account._id);
+    await this.otpRepository.delete(account._id);
 
-      await this.otpRepository.save(otp);
+    await this.otpRepository.save(otp);
 
-      const emailPayload: EmailPayload = {
-        to: emailAddress,
-        subject: 'OTP verification',
-        templateName: 'otp-email.html',
-        payload: {
-          recipient: account.firstName,
-          code: otpCode,
-        },
-      };
-  
-      await this.emailService.sendOTPVericationEmail(emailPayload);
+    const emailPayload: EmailPayload = {
+      to: emailAddress,
+      subject: 'OTP verification',
+      templateName: 'otp-email.html',
+      payload: {
+        recipient: account.firstName,
+        code: otpCode,
+      },
+    };
+
+    await this.emailService.sendOTPVericationEmail(emailPayload);
   }
 
-  public async resetPassword (payload: ResetPasswordDTO): Promise<void> {
+  public async resetPassword(payload: ResetPasswordDTO): Promise<void> {
     const { emailAddress, password } = payload;
     const account = await this.accountRepo.findByEmailAddress(emailAddress);
     if (!account) {

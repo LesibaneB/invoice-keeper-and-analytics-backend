@@ -2,7 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from '../auth.service';
-import { ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE, LOGIN_UNAUTHORIZED_MESSAGE } from '../utils/messages';
+import {
+  ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE,
+  LOGIN_UNAUTHORIZED_MESSAGE,
+} from '../utils/messages';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -15,14 +18,14 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       emailAddress,
       password,
     );
-    
+
     if (!account) {
       throw new UnauthorizedException(LOGIN_UNAUTHORIZED_MESSAGE);
     }
 
     if (!account.verified) {
       throw new UnauthorizedException(ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE);
-    } 
+    }
 
     return account;
   }
