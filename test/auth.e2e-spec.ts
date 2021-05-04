@@ -1,7 +1,10 @@
 import { ResetPasswordDTO } from './../src/auth/dto/reset-password.dto';
 import { VerifyAccountDTO } from './../src/auth/dto/verify-otp.dto';
 import { OTPRepository } from './../src/auth/repositories/otp-repository';
-import { ACCOUNT_NOT_FOUND_ERROR_MESSAGE, EMAIL_ADDRESS_INVALID } from './../src/auth/utils/messages';
+import {
+  ACCOUNT_NOT_FOUND_ERROR_MESSAGE,
+  EMAIL_ADDRESS_INVALID,
+} from './../src/auth/utils/messages';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -288,7 +291,7 @@ describe('AuthController (e2e)', () => {
           .expect(400, {
             statusCode: 400,
             message: ACCOUNT_NOT_FOUND_ERROR_MESSAGE,
-            error: 'Bad Request'
+            error: 'Bad Request',
           });
       });
   });
@@ -309,8 +312,7 @@ describe('AuthController (e2e)', () => {
       .send(createAccountParams)
       .expect(201)
       .then(async () => {
-
-        const newPassword= faker.internet.password();
+        const newPassword = faker.internet.password();
         const resetPassword: ResetPasswordDTO = {
           emailAddress: createAccountParams.emailAddress,
           password: newPassword,
@@ -340,8 +342,7 @@ describe('AuthController (e2e)', () => {
       .send(createAccountParams)
       .expect(201)
       .then(async () => {
-
-        const newPassword= faker.internet.password();
+        const newPassword = faker.internet.password();
         const resetPassword: ResetPasswordDTO = {
           emailAddress: faker.internet.email(),
           password: newPassword,
@@ -354,7 +355,7 @@ describe('AuthController (e2e)', () => {
           .expect(400, {
             statusCode: 400,
             message: ACCOUNT_NOT_FOUND_ERROR_MESSAGE,
-            error: 'Bad Request'
+            error: 'Bad Request',
           });
       });
   });

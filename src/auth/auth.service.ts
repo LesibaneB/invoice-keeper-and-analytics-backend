@@ -3,9 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AccountRepository } from './repositories/account-repository';
 import { CreateAccountDto } from './dto/create-account.dto';
 import * as bcrypt from 'bcrypt';
-import { Account } from './schemas/account-schema';
+import { Account, AccountDocument } from './schemas/account-schema';
 import { JwtService } from '@nestjs/jwt';
-import { JwtTokenDto } from './dto/JwtToken.dto';
+import { JwtTokenDto } from './dto/jwt-token.dto';
 import {
   ACCOUNT_EXISTS_ERROR_MESSAGE,
   ACCOUNT_NOT_FOUND_ERROR_MESSAGE,
@@ -31,7 +31,7 @@ export const JWT_EXPIRY_PERIOD = 3600;
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(
-    private readonly accountRepo: AccountRepository,
+    private readonly accountRepository: AccountRepository,
     private readonly jwtService: JwtService,
     private readonly passwordRepo: PasswordRepository,
     private readonly otpRepository: OTPRepository,
@@ -42,7 +42,7 @@ export class AuthService {
     registerAccountData: CreateAccountDto,
   ): Promise<void> {
     const { emailAddress, password, firstName } = registerAccountData;
-    const accountWithIdenticalEmail = await this.accountRepo.findByEmailAddress(
+    const accountWithIdenticalEmail = await this.accountRepository.findByEmailAddress(
       emailAddress,
     );
 
@@ -53,7 +53,7 @@ export class AuthService {
       throw new Error(ACCOUNT_EXISTS_ERROR_MESSAGE);
     }
 
-    const newAccount = await this.accountRepo.save(registerAccountData);
+    const newAccount = await this.accountRepository.save(registerAccountData);
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     await this.passwordRepo.save(newAccount._id, passwordHash);
 
@@ -83,8 +83,10 @@ export class AuthService {
   public async validateAccount(
     emailAddress: string,
     password: string,
-  ): Promise<Account> {
-    const account = await this.accountRepo.findByEmailAddress(emailAddress);
+  ): Promise<AccountDocument> {
+    const account = await this.accountRepository.findByEmailAddress(
+      emailAddress,
+    );
     if (!account) {
       this.logger.error(`Account for email ${emailAddress} not found.`);
       return null;
@@ -100,9 +102,10 @@ export class AuthService {
     return null;
   }
 
-  public signIn(account: Account): JwtTokenDto {
+  public signIn(account: AccountDocument): JwtTokenDto {
     return {
       access_token: this.jwtService.sign({
+        accountId: account._id,
         firstName: account.firstName,
         lastName: account.lastName,
         emailAddress: account.emailAddress,
@@ -114,7 +117,9 @@ export class AuthService {
 
   public async verifyAccount(payload: VerifyAccountDTO): Promise<void> {
     const { emailAddress, otp } = payload;
-    const account = await this.accountRepo.findByEmailAddress(emailAddress);
+    const account = await this.accountRepository.findByEmailAddress(
+      emailAddress,
+    );
     if (!account) {
       this.logger.error(`Account for email ${emailAddress} not found.`);
       throw new Error(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
@@ -137,7 +142,7 @@ export class AuthService {
       throw new Error(OTP_VERIFICATION_OTP_INVALID);
     }
 
-    await this.accountRepo.updateVerified(account.id);
+    await this.accountRepository.updateVerified(account.id);
 
     await this.otpRepository.delete(account._id);
   }
@@ -146,7 +151,9 @@ export class AuthService {
     payload: SendAccountVerificationDTO,
   ): Promise<void> {
     const { emailAddress } = payload;
-    const account = await this.accountRepo.findByEmailAddress(emailAddress);
+    const account = await this.accountRepository.findByEmailAddress(
+      emailAddress,
+    );
     if (!account) {
       this.logger.error(`Account for email ${emailAddress} not found.`);
       throw new Error(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
@@ -179,7 +186,9 @@ export class AuthService {
 
   public async resetPassword(payload: ResetPasswordDTO): Promise<void> {
     const { emailAddress, password } = payload;
-    const account = await this.accountRepo.findByEmailAddress(emailAddress);
+    const account = await this.accountRepository.findByEmailAddress(
+      emailAddress,
+    );
     if (!account) {
       this.logger.error(`Account for email ${emailAddress} not found.`);
       throw new Error(ACCOUNT_NOT_FOUND_ERROR_MESSAGE);
