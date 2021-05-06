@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EntityExtractionController } from './entity-extraction.controller';
-import { EntityExtractionService } from './entity-extraction.service';
+import { InvoiceController } from './invoice.controller';
+import { InvoiceService } from './services/invoice/invoice.service';
 import { ExtractEntitiesDto } from './dto/extract-entities.dto';
 
 describe('EntityExtractionController', () => {
-  let controller: EntityExtractionController;
-  let extractionService: EntityExtractionService;
+  let controller: InvoiceController;
+  let extractionService: InvoiceService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [EntityExtractionController],
+      controllers: [InvoiceController],
       providers: [
         {
-          provide: EntityExtractionService,
+          provide: InvoiceService,
           useFactory: () => ({
             extractEntities: jest.fn(() => true),
           }),
@@ -20,11 +20,11 @@ describe('EntityExtractionController', () => {
       ],
     }).compile();
 
-    controller = module.get<EntityExtractionController>(
-      EntityExtractionController,
+    controller = module.get<InvoiceController>(
+      InvoiceController,
     );
-    extractionService = module.get<EntityExtractionService>(
-      EntityExtractionService,
+    extractionService = module.get<InvoiceService>(
+      InvoiceService,
     );
   });
 

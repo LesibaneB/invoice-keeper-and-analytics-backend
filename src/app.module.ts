@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { EntityExtractionModule } from './entity-extraction/entity-extraction.module';
+import { InvoiceModule } from './invoice/invoice.module';
 import { ConfigModule } from '@nestjs/config';
 
 import { getGCloudConfig } from './config/gcloud-automl-configuration';
@@ -12,7 +12,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
-    EntityExtractionModule,
+    InvoiceModule,
     AuthModule,
     ConfigModule.forRoot({
       load: [getGCloudConfig, getSendGridConfig],

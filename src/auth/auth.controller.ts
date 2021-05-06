@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
-import { JwtTokenDto } from './dto/JwtToken.dto';
+import { LocalAuthGuard } from '../guards/local-auth.guard';
+import { JwtTokenDto } from './dto/jwt-token.dto';
 import { VerifyAccountDTO as VerifyAccountDTO } from './dto/verify-otp.dto';
 import { SendAccountVerificationDTO } from './dto/resend-otp.dto';
 
@@ -44,7 +44,9 @@ export class AuthController {
   }
 
   @Post('/account/send-verification')
-  public async sendAccountVerification(@Body() payload: SendAccountVerificationDTO): Promise<void> {
+  public async sendAccountVerification(
+    @Body() payload: SendAccountVerificationDTO,
+  ): Promise<void> {
     try {
       await this.authService.sendAccountVerification(payload);
     } catch (e) {
