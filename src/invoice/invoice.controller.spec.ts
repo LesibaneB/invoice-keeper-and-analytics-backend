@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InvoiceController } from './invoice.controller';
-import { InvoiceService } from './invoice.service';
+import { InvoiceService } from './services/invoice/invoice.service';
 import { ExtractEntitiesDto } from './dto/extract-entities.dto';
 
 describe('EntityExtractionController', () => {

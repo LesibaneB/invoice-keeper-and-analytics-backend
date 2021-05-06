@@ -8,16 +8,23 @@ import {
   Request,
   Get,
   Param,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { InvoiceService } from './invoice.service';
+import { InvoiceService } from './services/invoice/invoice.service';
 import { ExtractEntitiesDto } from './dto/extract-entities.dto';
 import { InvoiceModel } from './models/invoice';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Invoice } from './schemas/invoice-schema';
+import { FileUploadService } from './services/file-upload/file-upload.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('invoice')
 export class InvoiceController {
-  constructor(private invoiceService: InvoiceService) {}
+  constructor(
+    private invoiceService: InvoiceService,
+    private fileUploadService: FileUploadService,
+  ) {}
 
   @Post('/extract-data')
   public async extractInvoiceData(
@@ -68,6 +75,19 @@ export class InvoiceController {
     try {
       const accountId = req?.user.accountId;
       await this.invoiceService.storeInvoiceData(accountId, payload);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/upload-image')
+  @UseInterceptors(FileInterceptor('file'))
+  public async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<string> {
+    try {
+      return await this.fileUploadService.uploadInvoice(file);
     } catch (error) {
       throw new BadRequestException(error.message);
     }

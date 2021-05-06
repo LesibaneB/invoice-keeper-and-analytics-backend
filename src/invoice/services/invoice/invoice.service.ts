@@ -1,14 +1,14 @@
-import { InvoiceRepository } from './respositories/invoice-repository';
+import { InvoiceRepository } from '../../respositories/invoice-repository';
 import { Injectable, Logger } from '@nestjs/common';
 import { google } from '@google-cloud/automl/build/protos/protos';
-import { ExtractEntitiesDto } from './dto/extract-entities.dto';
+import { ExtractEntitiesDto } from '../../dto/extract-entities.dto';
 import { ConfigService } from '@nestjs/config';
 import IAnnotationPayload = google.cloud.automl.v1.IAnnotationPayload;
 import * as camelCase from 'lodash.camelcase';
-import { InvoiceModel, Items } from './models/invoice';
-import { AnalysisResult } from './models/analysis-result';
-import { InvoiceDTO } from './dto/invoice-upload.dto';
-import { Invoice } from './schemas/invoice-schema';
+import { InvoiceModel, Items } from '../../models/invoice';
+import { AnalysisResult } from '../../models/analysis-result';
+import { InvoiceDTO } from '../../dto/invoice-upload.dto';
+import { Invoice } from '../../schemas/invoice-schema';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { PredictionServiceClient } = require('@google-cloud/automl').v1;

@@ -32,6 +32,9 @@ export class Invoice {
     price: { type: Number };
     quantity: { type: Number };
   }>;
+
+  @Prop({ required: true })
+  invoiceImageURL: string;
 }
 
 export const InvoiceSchema = SchemaFactory.createForClass(Invoice);

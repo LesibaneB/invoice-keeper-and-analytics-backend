@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InvoiceService } from './invoice.service';
 import { ConfigService } from '@nestjs/config';
-import { ExtractEntitiesDto } from './dto/extract-entities.dto';
+import { ExtractEntitiesDto } from '../../dto/extract-entities.dto';
 
 describe('EntityExtractionService', () => {
   let service: InvoiceService;

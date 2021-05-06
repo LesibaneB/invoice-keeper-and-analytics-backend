@@ -1,4 +1,3 @@
-import { Invoice } from './../src/invoice/schemas/invoice-schema';
 import { JwtTokenDto } from './../src/auth/dto/jwt-token.dto';
 import { InvoiceModule } from './../src/invoice/invoice.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
@@ -17,7 +16,7 @@ import { OTPRepository } from '../src/auth/repositories/otp-repository';
 import { CreateAccountDto } from '../src/auth/dto/create-account.dto';
 import { VerifyAccountDTO } from '../src/auth/dto/verify-otp.dto';
 import { AuthModule } from '../src/auth/auth.module';
-import { InvoiceService } from '../src/invoice/invoice.service';
+import { InvoiceService } from '../src/invoice/services/invoice/invoice.service';
 
 describe('Invoice E2E', () => {
   let app: INestApplication;
