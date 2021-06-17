@@ -1,6 +1,6 @@
 import { OTPRepository } from './repositories/otp-repository';
 import { EmailSenderService } from '../email-sender/email-sender.service';
-import { JwtTokenDto } from './dto/JwtToken.dto';
+import { JwtTokenDto } from './dto/jwt-token.dto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService, JWT_EXPIRY_PERIOD } from './auth.service';
 import { AccountRepository } from './repositories/account-repository';

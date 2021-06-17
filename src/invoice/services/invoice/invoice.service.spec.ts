@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EntityExtractionService } from './entity-extraction.service';
+import { InvoiceService } from './invoice.service';
 import { ConfigService } from '@nestjs/config';
-import { ExtractEntitiesDto } from './dto/extract-entities.dto';
+import { ExtractEntitiesDto } from '../../dto/extract-entities.dto';
 
 describe('EntityExtractionService', () => {
-  let service: EntityExtractionService;
+  let service: InvoiceService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: EntityExtractionService,
+          provide: InvoiceService,
           useFactory: () => ({
             extractEntities: jest.fn(() => 'success'),
           }),
@@ -24,7 +24,7 @@ describe('EntityExtractionService', () => {
       ],
     }).compile();
 
-    service = module.get<EntityExtractionService>(EntityExtractionService);
+    service = module.get<InvoiceService>(InvoiceService);
   });
 
   it('should be defined', () => {

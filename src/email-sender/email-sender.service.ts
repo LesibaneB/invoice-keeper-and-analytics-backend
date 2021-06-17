@@ -12,7 +12,7 @@ export class EmailSenderService {
   private readonly sendGrid = new MailService();
 
   constructor(private readonly configService: ConfigService) {
-    this.sendGrid.setApiKey(this.configService.get<string>('api.sendEmailKey'))
+    this.sendGrid.setApiKey(this.configService.get<string>('api.sendEmailKey'));
   }
 
   public async sendOTPVericationEmail(
