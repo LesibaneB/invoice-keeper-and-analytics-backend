@@ -11,8 +11,8 @@ describe('EmailSenderService', () => {
       providers: [
         {
           provide: ConfigService,
-          useFactory: ()=>({
-            get: jest.fn(()=> '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')
+          useFactory: () => ({
+            get: jest.fn(() => ''),
           }),
         },
         EmailSenderService,
