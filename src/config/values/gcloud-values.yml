@@ -1,5 +1,5 @@
 gcloud:
-  projectId: "atomic-land-284121"
-  location: "us-central1"
-  modelId: "TEN1174535704185667584"
-  bucket: "processed-invoice-image-data"
+  projectId: ""
+  location: ""
+  modelId: ""
+  bucket: ""
